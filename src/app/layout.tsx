@@ -1,7 +1,8 @@
+// src/app/layout.tsx - Updated für Portfolio
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import Header from "@/components/blog/Header";
+import PortfolioHeader from "@/components/portfolio/Header"; // Neue Portfolio Header
 import { siteConfig } from "@/content/config";
 import { Space_Grotesk } from "next/font/google";
 import dynamic from "next/dynamic";
@@ -17,23 +18,23 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: siteConfig.title,
-    template: `%s | ${siteConfig.title}`,
+    default: siteConfig.seo.defaultTitle,
+    template: siteConfig.seo.titleTemplate,
   },
-  description: siteConfig.description,
+  description: siteConfig.seo.defaultDescription,
   keywords: siteConfig.keywords,
   authors: [{ name: siteConfig.author.name, url: siteConfig.url }],
   creator: siteConfig.author.name,
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "de_DE",
     url: siteConfig.url,
-    title: siteConfig.title,
-    description: siteConfig.description,
+    title: siteConfig.seo.defaultTitle,
+    description: siteConfig.seo.defaultDescription,
     siteName: siteConfig.title,
     images: [
       {
-        url: `${siteConfig.url}/og-image.png`,
+        url: siteConfig.seo.defaultImage,
         width: 1200,
         height: 630,
         alt: siteConfig.title,
@@ -42,22 +43,56 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: siteConfig.title,
-    description: siteConfig.description,
-    images: [`${siteConfig.url}/og-image.png`],
-    creator: `@${siteConfig.author.social
-      .find((s) => s.name === "Twitter")
-      ?.url.split("/")
-      .pop()}`,
+    title: siteConfig.seo.defaultTitle,
+    description: siteConfig.seo.defaultDescription,
+    images: [siteConfig.seo.defaultImage],
+    creator: siteConfig.seo.twitterHandle,
   },
   icons: {
     icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/favicon.ico",
+    shortcut: "/favicon-16x16.png",
+    apple: "/apple-touch-icon.png",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
-import { NotFoundProvider } from "@/lib/not-found-context";
+// Structured Data für Photographer
+const photographerSchema = {
+  "@context": "https://schema.org",
+  "@type": ["Person", "ProfessionalService"],
+  "name": siteConfig.author.name,
+  "jobTitle": "Fotograf & Photographer",
+  "description": siteConfig.description,
+  "url": siteConfig.url,
+  "image": siteConfig.author.avatar,
+  "email": siteConfig.author.email,
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "DE"
+  },
+  "serviceType": [
+    "Fotografie",
+    "Photography", 
+    "Portrait Photography",
+    "Event Photography",
+    "Creative Photography"
+  ],
+  "areaServed": {
+    "@type": "Country",
+    "name": "Germany"
+  },
+  "sameAs": siteConfig.author.social.map(social => social.url).filter(url => url !== "#")
+};
 
 export default function RootLayout({
   children,
@@ -65,20 +100,32 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} dark`}>
+    <html lang="de" className={`${spaceGrotesk.variable} dark`}>
       <head>
-        <link rel="preconnect" href="https://placehold.co" />
-        <link rel="preconnect" href="https://raw.githubusercontent.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        
+        {/* Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(photographerSchema) }}
+        />
+        
+        {/* Preload critical images */}
+        <link rel="preload" as="image" href="/images/hero-image.jpg" />
       </head>
       <body className="font-body bg-background text-foreground antialiased">
         <Spotlight />
-        <NotFoundProvider>
-          <div className="relative z-40 flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-        </NotFoundProvider>
+        
+        <div className="relative z-40 flex flex-col min-h-screen">
+          {/* Portfolio Header instead of Blog Header */}
+          <PortfolioHeader />
+          
+          <main className="flex-1 pt-16 lg:pt-20">{children}</main>
+          
+          <Footer />
+        </div>
+        
         <Toaster />
       </body>
     </html>
